@@ -4722,6 +4722,7 @@ MonoBehaviour:
   _playerScript: {fileID: 1528544744}
   healthFill: {fileID: 1874970933}
   healthText: {fileID: 119535948}
+  defence: 0
 --- !u!136 &1010783080
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -6751,6 +6752,7 @@ MonoBehaviour:
   _enemyScript: {fileID: 1010783079}
   healthFill: {fileID: 740696345}
   healthText: {fileID: 920548327}
+  defence: 0
   attackButton: {fileID: 536127639}
   defendButton: {fileID: 91383230}
   healButton: {fileID: 781814588}
@@ -8801,7 +8803,7 @@ MonoBehaviour:
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 0
-  m_FillAmount: 0.439
+  m_FillAmount: 1
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0

@@ -15,6 +15,7 @@ public class EnemyScript : MonoBehaviour
 	public PlayerScript _playerScript;
 	public Image healthFill;
 	public Text healthText;
+	public int defence;
 
 	private void Start()
 	{
@@ -25,23 +26,45 @@ public class EnemyScript : MonoBehaviour
 
 	public void BeginTurn()
 	{
-		// choose to attack, defend, or heal
-		Attack();
+		// defence drains by 2 per turn
+		defence = Mathf.Clamp(defence -= 2, 0, 15);
+
+		if (currentHealth < 50 && Random.Range(0f,1f) <= 0.70f) // 70% chance to heal if low health
+		{
+			StartCoroutine(HealCoroutine());
+		}
+		else
+		{
+			if (defence <= 10 && Random.Range(0,1f) <= 0.4f) // 40% chance to block if defence is below 10 defence
+			{
+				StartCoroutine(DefendCoroutine());
+			}
+			else
+			{
+				StartCoroutine(AttackCoroutine());
+			}
+		}
 	}
 
-	public void Attack()
+	IEnumerator DefendCoroutine()
 	{
-		StartCoroutine(AttackCoroutine());
+		anim.SetTrigger("Defend");
+		yield return new WaitForSeconds(1f); // Wait for animation to play
+		// Add 5 defence, capped at 15
+		defence = Mathf.Clamp(defence += 5, 0, 15);
+		BattleManager.instance.EndTurn();
 	}
 
-	public void Defend()
+	IEnumerator HealCoroutine()
 	{
-
-	}
-
-	public void Heal()
-	{
-
+		anim.SetTrigger("Defend"); // No heal animation, so using this
+		yield return new WaitForSeconds(0.3f); // Wait for animation to play
+		int healValue = Random.Range(10, 21); // 10-20
+		currentHealth = Mathf.Clamp(currentHealth += healValue, 0, maxHealth);
+		healthFill.fillAmount = currentHealth / 100;
+		healthText.text = $"HP: {currentHealth} / {maxHealth}";
+		yield return new WaitForSeconds(0.7f); // Wait for animation to end
+		BattleManager.instance.EndTurn();
 	}
 
 	private void FixedUpdate()
@@ -52,37 +75,23 @@ public class EnemyScript : MonoBehaviour
 	public IEnumerator AttackCoroutine()
 	{
 		// Moves the enemy to the attack position
-		while (Vector3.Distance(transform.position, attackPosition.transform.position) > 0.5f)
+		while (Vector3.Distance(transform.position, attackPosition.transform.position) > 0.2f)
 		{
 			rb.velocity = transform.forward * movementSpeed;
 			yield return null;
 		}
 
 		// Plays the attack animation
-		var attackIndex = Random.Range(1, 4); // Range max is exclusive: returns 1-3
-		RandomAttack(attackIndex);
+		RandomAttackAnimation();
 		yield return new WaitForSeconds(0.6f); // Wait for attack animation to hit
-		switch (attackIndex)
-		{
-			case 1:
-				_playerScript.TakeDamage(5);
-				break;
-			case 2:
-				_playerScript.TakeDamage(10);
-				break;
-			case 3:
-				_playerScript.TakeDamage(15);
-				break;
-			default:
-				break;
-		}
+		_playerScript.TakeDamage(Random.Range(12, 25) - _playerScript.defence); // 12-24 damage
 		yield return new WaitForSeconds(0.6f); // Wait for attack animation to end
 
 		// Turns the enemy to look at the idle position
 		this.transform.LookAt(idlePosition.transform.position);
 
 		// Moves the enemy to the idle position
-		while (Vector3.Distance(transform.position, idlePosition.transform.position) > 0.1f)
+		while (Vector3.Distance(transform.position, idlePosition.transform.position) > 0.2f)
 		{
 			rb.velocity = transform.forward * movementSpeed;
 			yield return null;
@@ -96,9 +105,10 @@ public class EnemyScript : MonoBehaviour
 		BattleManager.instance.EndTurn();
 	}
 
-	public void RandomAttack(int index)
+	public void RandomAttackAnimation()
 	{
-		switch (index)
+		var attackIndex = Random.Range(1, 4); // Range max is exclusive: returns 1-3
+		switch (attackIndex)
 		{
 			case 1:
 				anim.SetTrigger("Attack1");
